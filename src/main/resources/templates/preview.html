@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Markdown预览</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        .preview-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .preview-content {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+        }
+        .back-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-container">
+        <h1>Markdown预览</h1>
+        <div class="preview-content" th:utext="${html}"></div>
+        <a href="/" class="back-button">返回编辑</a>
+    </div>
+</body>
+</html>
