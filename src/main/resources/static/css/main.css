@@ -172,3 +172,100 @@ textarea {
   padding: 16px;
   background-color: #fff;
 }
+
+/* 上传按钮样式 */
+.upload-btn {
+  padding: 8px 16px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 20px;
+}
+
+.upload-btn:hover {
+  background-color: #0b7dda;
+}
+
+/* 模态弹窗样式 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 10% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  border-radius: 5px;
+  width: 50%;
+  max-width: 500px;
+}
+
+.theme-dark .modal-content {
+  background-color: #2d2d2d;
+  color: #e0e0e0;
+  border-color: #444;
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+}
+
+.theme-dark .close:hover,
+.theme-dark .close:focus {
+  color: white;
+}
+
+/* 上传区域样式 */
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 5px;
+  padding: 25px;
+  text-align: center;
+  margin: 20px 0;
+  transition: background-color 0.3s;
+}
+
+.theme-dark .upload-area {
+  border-color: #555;
+}
+
+.upload-area.highlight {
+  background-color: rgba(33, 150, 243, 0.1);
+  border-color: #2196F3;
+}
+
+.file-input-label {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.file-input-label:hover {
+  background-color: #45a049;
+}

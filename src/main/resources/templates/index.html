@@ -20,6 +20,7 @@
                     <button class="dropdown-item" id="export-word">Word</button>
                 </div>
             </div>
+            <button class="upload-btn" id="upload-btn">上传Markdown</button>
             <div class="theme-selector">
                 <select id="theme-select">
                     <option value="github">GitHub主题</option>
@@ -37,6 +38,22 @@
             <div id="live-preview" class="preview-area markdown-body"></div>
         </div>
     </div>
+    
+    <!-- 上传Markdown文件的弹窗 -->
+    <div id="upload-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>上传Markdown文件</h2>
+            <div class="upload-area" id="drop-area">
+                <p>拖拽Markdown文件到这里或</p>
+                <label for="file-input" class="file-input-label">选择文件</label>
+                <input type="file" id="file-input" accept=".md,.markdown" style="display: none;">
+            </div>
+            <div id="file-info" style="margin-top: 10px; display: none;">
+                <p>已选择文件: <span id="file-name"></span></p>
+            </div>
+        </div>
+    </div>
 
     <script>
         const markdownInput = document.getElementById('markdown');
@@ -44,6 +61,13 @@
         const exportDropdown = document.getElementById('export-dropdown');
         const exportMenu = document.getElementById('export-menu');
         const themeSelect = document.getElementById('theme-select');
+        const uploadBtn = document.getElementById('upload-btn');
+        const uploadModal = document.getElementById('upload-modal');
+        const closeBtn = document.querySelector('.close');
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const fileInfo = document.getElementById('file-info');
+        const fileName = document.getElementById('file-name');
         
         // 实时预览
         markdownInput.addEventListener('input', function() {
@@ -176,6 +200,96 @@
                 }
             }
         });
+        
+        // 上传Markdown文件相关功能
+        // 打开弹窗
+        uploadBtn.addEventListener('click', function() {
+            uploadModal.style.display = 'block';
+        });
+        
+        // 关闭弹窗
+        closeBtn.addEventListener('click', function() {
+            uploadModal.style.display = 'none';
+            fileInfo.style.display = 'none';
+            fileName.textContent = '';
+        });
+        
+        // 点击弹窗外部关闭弹窗
+        window.addEventListener('click', function(event) {
+            if (event.target === uploadModal) {
+                uploadModal.style.display = 'none';
+                fileInfo.style.display = 'none';
+                fileName.textContent = '';
+            }
+        });
+        
+        // 处理拖拽事件
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, highlight, false);
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, unhighlight, false);
+        });
+        
+        function highlight() {
+            dropArea.classList.add('highlight');
+        }
+        
+        function unhighlight() {
+            dropArea.classList.remove('highlight');
+        }
+        
+        // 处理文件拖放
+        dropArea.addEventListener('drop', handleDrop, false);
+        
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+        
+        // 处理文件选择
+        fileInput.addEventListener('change', function() {
+            handleFiles(this.files);
+        });
+        
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                // 检查文件类型
+                if (file.name.endsWith('.md') || file.name.endsWith('.markdown')) {
+                    // 显示文件信息
+                    fileInfo.style.display = 'block';
+                    fileName.textContent = file.name;
+                    
+                    // 读取文件内容
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const content = e.target.result;
+                        // 将内容设置到编辑器
+                        markdownInput.value = content;
+                        // 触发input事件更新预览
+                        const event = new Event('input');
+                        markdownInput.dispatchEvent(event);
+                        // 关闭弹窗
+                        uploadModal.style.display = 'none';
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert('请上传.md或.markdown格式的文件');
+                }
+            }
+        }
     </script>
 </body>
 </html>
