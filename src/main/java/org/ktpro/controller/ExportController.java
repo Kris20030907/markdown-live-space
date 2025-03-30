@@ -16,7 +16,6 @@ import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.ext.tables.TablesExtension;
 import com.vladsch.flexmark.util.ast.Node;
 
-import java.io.StringReader;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -27,9 +26,10 @@ import java.io.OutputStream;
 @Controller
 public class ExportController {
 
+    // TODO: PDF 导出暂时有些问题
     @PostMapping("/export/pdf")
     @ResponseBody
-    public void exportToPdf(@RequestParam String markdown, HttpServletResponse response) throws Exception {
+    public void exportToPdf(@RequestParam String markdown, @RequestParam(required = false, defaultValue = "github") String theme, HttpServletResponse response) throws Exception {
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=export.pdf");
 
@@ -44,22 +44,63 @@ public class ExportController {
             .build();
         String html = renderer.render(document);
         
-        // 添加简化的CSS样式到HTML，提高与XMLWorker的兼容性
-        String cssStyles = "<style>" +
-            "body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }" +
+        // 添加CSS样式到HTML，根据当前主题设置样式
+        String cssStyles = "<style>";
+        
+        // 基础样式
+        cssStyles += "body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }" +
             "h1 { font-size: 24pt; margin-bottom: 10pt; }" +
             "h2 { font-size: 18pt; margin-bottom: 8pt; }" +
             "h3 { font-size: 14pt; margin-bottom: 6pt; }" +
             "p { margin-bottom: 10pt; }" +
-            "table { border-collapse: collapse; width: 100%; margin-bottom: 10pt; }" +
-            "table, th, td { border: 1px solid #000; padding: 5pt; }" +
             "ul, ol { margin-bottom: 10pt; padding-left: 20pt; }" +
-            "li { margin-bottom: 5pt; }" +
-            "</style>";
+            "li { margin-bottom: 5pt; }";
+            
+        // 根据主题设置不同的样式
+        if ("dark".equals(theme)) {
+            // 暗黑主题样式
+            cssStyles += "body { background-color: #1e1e1e !important; color: #ffffff !important; }" +
+                "table { border-collapse: collapse; width: 100%; margin-bottom: 10pt; background-color: #2d2d2d !important; }" +
+                "table, th, td { border: 1px solid #444 !important; padding: 5pt; color: #ffffff !important; }" +
+                "a { color: #58a6ff !important; }" +
+                "code { background-color: #2d2d2d !important; color: #e0e0e0 !important; }" +
+                "pre { background-color: #2d2d2d !important; }" +
+                ".markdown-body { color: #ffffff !important; background-color: #2d2d2d !important; }" +
+                ".markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 { color: #ffffff !important; }" +
+                ".markdown-body h1, .markdown-body h2 { border-bottom-color: #444 !important; }" +
+                ".markdown-body blockquote { color: #b0b0b0 !important; border-left-color: #444 !important; }" +
+                ".markdown-body code { background-color: #3a3a3a !important; color: #e0e0e0 !important; }" +
+                ".markdown-body pre { background-color: #3a3a3a !important; }" +
+                ".markdown-body pre code { color: #e0e0e0 !important; }" +
+                ".markdown-body a { color: #58a6ff !important; }" +
+                ".markdown-body table { border-color: #444 !important; }" +
+                ".markdown-body table th, .markdown-body table td { border-color: #444 !important; color: #ffffff !important; }" +
+                ".markdown-body table tr { background-color: #2d2d2d !important; border-top-color: #444 !important; }" +
+                ".markdown-body table tr:nth-child(2n) { background-color: #3a3a3a !important; }";
+        } else {
+            // GitHub主题样式（默认）
+            cssStyles += "body { background-color: #ffffff !important; color: #24292e !important; }" +
+                "table { border-collapse: collapse; width: 100%; margin-bottom: 10pt; }" +
+                "table, th, td { border: 1px solid #dfe2e5 !important; padding: 5pt; }" +
+                "a { color: #0366d6 !important; }" +
+                "code { background-color: rgba(27, 31, 35, 0.05) !important; color: #24292e !important; }" +
+                "pre { background-color: #f6f8fa !important; }" +
+                ".markdown-body { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif !important; font-size: 16px !important; line-height: 1.5 !important; word-wrap: break-word !important; color: #24292e !important; background-color: #fff !important; }" +
+                ".markdown-body h1, .markdown-body h2 { border-bottom: 1px solid #eaecef !important; }" +
+                ".markdown-body blockquote { padding: 0 1em !important; color: #6a737d !important; border-left: 0.25em solid #dfe2e5 !important; }" +
+                ".markdown-body code { padding: 0.2em 0.4em !important; background-color: rgba(27, 31, 35, 0.05) !important; border-radius: 3px !important; }" +
+                ".markdown-body pre { background-color: #f6f8fa !important; }" +
+                ".markdown-body table { border-spacing: 0 !important; border-collapse: collapse !important; }" +
+                ".markdown-body table th, .markdown-body table td { padding: 6px 13px !important; border: 1px solid #dfe2e5 !important; }" +
+                ".markdown-body table tr { background-color: #fff !important; border-top: 1px solid #c6cbd1 !important; }" +
+                ".markdown-body table tr:nth-child(2n) { background-color: #f6f8fa !important; }";
+        }
         
-        // 简化HTML结构，提高与XMLWorker的兼容性
-        String fullHtml = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\" />" 
-            + cssStyles + "</head><body>" + html + "</body></html>";
+        cssStyles += "</style>";
+        
+        // 只保留Markdown内容的HTML，不添加额外的HTML结构
+        // 直接使用最简化的HTML内容，只包含必要的内容
+        String purifiedHtml = "<div>" + html + "</div>";
         
         Document pdfDocument = new Document();
         PdfWriter writer = null;
@@ -70,12 +111,20 @@ public class ExportController {
             pdfDocument.open();
             
             try {
-                // 使用XMLWorker解析HTML
-                ByteArrayInputStream htmlStream = new ByteArrayInputStream(fullHtml.getBytes(StandardCharsets.UTF_8));
+                // 将CSS样式直接应用到内容元素上
+                ByteArrayInputStream htmlStream = new ByteArrayInputStream(purifiedHtml.getBytes(StandardCharsets.UTF_8));
                 XMLWorkerHelper xmlWorkerHelper = XMLWorkerHelper.getInstance();
                 
-                // 使用更安全的解析方式
-                xmlWorkerHelper.parseXHtml(writer, pdfDocument, htmlStream, StandardCharsets.UTF_8);
+                // 创建CSS样式输入流 - 简化CSS以避免冲突
+                String simplifiedCss = cssStyles
+                    .replace("<style>", "")
+                    .replace("</style>", "")
+                    .replaceAll("!important", ""); // 移除!important标记，避免样式冲突
+                
+                ByteArrayInputStream cssStream = new ByteArrayInputStream(simplifiedCss.getBytes(StandardCharsets.UTF_8));
+                
+                // 使用XMLWorkerHelper直接解析HTML并应用CSS
+                xmlWorkerHelper.parseXHtml(writer, pdfDocument, htmlStream, cssStream, StandardCharsets.UTF_8);
                 
                 // 检查是否成功添加内容
                 if (pdfDocument.getPageNumber() == 0) {
@@ -113,10 +162,7 @@ public class ExportController {
      * @param markdown 原始Markdown内容
      */
     private void fallbackPdfContent(Document pdfDocument, String markdown) throws Exception {
-        pdfDocument.newPage();
-        pdfDocument.add(new Paragraph("PDF渲染遇到问题，显示简化内容："));
-        pdfDocument.add(new Paragraph(" "));
-        
+        // 不创建新页面，避免多余页面
         // 处理标题
         java.util.regex.Pattern headingPattern = java.util.regex.Pattern.compile("^(#{1,6})\\s+(.+)$", java.util.regex.Pattern.MULTILINE);
         java.util.regex.Matcher headingMatcher = headingPattern.matcher(markdown);
@@ -125,7 +171,11 @@ public class ExportController {
         while (headingMatcher.find()) {
             String level = headingMatcher.group(1);
             String title = headingMatcher.group(2).trim();
-            String replacement = "\n" + title + "\n";
+            // 根据标题级别添加不同的前缀
+            String prefix = "";
+            if (level.length() == 1) prefix = "> ";
+            else if (level.length() <= 3) prefix = "• ";
+            String replacement = "\n" + prefix + title + "\n";
             headingMatcher.appendReplacement(processedContent, replacement);
         }
         headingMatcher.appendTail(processedContent);
