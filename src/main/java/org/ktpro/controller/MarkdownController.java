@@ -20,6 +20,24 @@ public class MarkdownController {
         return "index";
     }
     
+    @GetMapping("/preview")
+    public String previewPage(@RequestParam(name = "markdown", required = false) String markdown, org.springframework.ui.Model model) {
+        if (markdown != null && !markdown.isEmpty()) {
+            Parser parser = Parser.builder()
+                .extensions(List.of(TablesExtension.create()))
+                .build();
+            Node document = parser.parse(markdown);
+            HtmlRenderer renderer = HtmlRenderer.builder()
+                .extensions(List.of(TablesExtension.create()))
+                .escapeHtml(true)
+                .build();
+            model.addAttribute("html", renderer.render(document));
+        } else {
+            model.addAttribute("html", "");
+        }
+        return "preview";
+    }
+    
     @PostMapping("/preview")
     @ResponseBody
     public String preview(@RequestParam String markdown) {
